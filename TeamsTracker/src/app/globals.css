@@ -1,49 +1,7 @@
 @import "tailwindcss";
+@import url('https://assets.definit.com/tokens.css');
 
 /* ── Theme Variables (matches manage.definit.com) ──────────────── */
-:root {
-  --primary: #ee4823;
-  --primary-hover: #bc3926;
-  --success: #22c55e;
-  --warning: #f6eb15;
-  --danger: #ef4444;
-  --bg: #f8fafc;
-  --bg-card: #ffffff;
-  --text: #2d2d2d;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-}
-
-[data-theme="dark"] {
-  --primary: #f19d23;
-  --primary-hover: #ee6f23;
-  --bg: #0f172a;
-  --bg-card: #1e293b;
-  --text: #f8fafc;
-  --text-muted: #94a3b8;
-  --border: #334155;
-  --gray-50: #1e293b;
-  --gray-100: #1e293b;
-  --gray-200: #334155;
-  --gray-300: #475569;
-  --gray-400: #64748b;
-  --gray-500: #94a3b8;
-  --gray-600: #cbd5e1;
-  --gray-700: #e2e8f0;
-  --gray-800: #f1f5f9;
-  --gray-900: #f8fafc;
-}
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
