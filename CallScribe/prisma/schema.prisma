@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Recording {
+  id              String   @id @default(uuid())
+  phoneNumber     String   @map("phone_number")
+  direction       String
+  startedAt       DateTime @map("started_at")
+  durationSeconds Int?     @map("duration_seconds")
+  audioFilePath   String   @map("audio_file_path")
+  audioFileSize   BigInt?  @map("audio_file_size")
+  audioMimeType   String   @default("audio/mp4") @map("audio_mime_type")
+
+  transcriptStatus String  @default("pending") @map("transcript_status")
+  transcript       String? @db.Text
+  transcriptError  String? @map("transcript_error") @db.Text
+
+  emailSent   Boolean   @default(false) @map("email_sent")
+  emailSentAt DateTime? @map("email_sent_at")
+  emailError  String?   @map("email_error") @db.Text
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("recordings")
+  @@index([phoneNumber])
+  @@index([transcriptStatus])
+  @@index([createdAt])
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  displayName String?  @map("display_name")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}

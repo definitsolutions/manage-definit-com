@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Definit Manage</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/logo-mark.png">
+<script>
+(function() {
+  var saved = localStorage.getItem('theme');
+  var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<style>
+:root {
+  --primary: #ee4823;
+  --primary-hover: #bc3926;
+  --bg: #f8fafc;
+  --bg-card: #ffffff;
+  --text: #2d2d2d;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+}
+[data-theme="dark"] {
+  --primary: #f19d23;
+  --primary-hover: #ee6f23;
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+body { background: var(--bg); color: var(--text); }
+
+.shell {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Icon Rail ── */
+.rail {
+  width: 48px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  z-index: 100;
+}
+.rail-logo {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.rail-logo img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.rail-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+.rail-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.rail-btn:hover {
+  background: var(--gray-200);
+  color: var(--text);
+}
+.rail-btn.active {
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+}
+.rail-btn svg { pointer-events: none; }
+.rail-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  width: 100%;
+}
+
+/* ── Content area ── */
+.content {
+  position: relative;
+  overflow: hidden;
+}
+.content iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--bg);
+}
+.content iframe.hidden {
+  display: none;
+}
+
+/* ── Tooltip ── */
+.rail-btn[title]::after {
+  content: attr(title);
+  display: none;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- Icon Rail -->
+  <nav class="rail">
+    <div class="rail-logo">
+      <img src="/logo-mark.png" alt="Definit">
+    </div>
+    <div class="rail-items" id="rail-items"></div>
+    <div class="rail-bottom">
+      <button class="rail-btn" title="Toggle theme" onclick="toggleTheme()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Iframe content area -->
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ── App Registry ──
+const apps = [
+  { id: 'tasks',      label: 'Recurring Tasks', path: '/tasks/',      icon: 'repeat' },
+  { id: 'notes',      label: 'Notes',           path: '/notes/',      icon: 'note' },
+  { id: 'callscribe', label: 'CallScribe',      path: '/callscribe/', icon: 'phone' },
+  { id: 'eer',        label: 'Email Review',     path: '/eer/',        icon: 'mail-search' },
+  { id: 'teams',      label: 'Teams Tasks',      path: '/teams/',      icon: 'users' },
+];
+
+// ── SVG icons (matching lucide) ──
+const icons = {
+  repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  note: '<path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/>',
+  phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M14.05 2a9 9 0 0 1 8 7.94"/><path d="M14.05 6A5 5 0 0 1 18 10"/>',
+  'mail-search': '<path d="M22 12.5V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7.5"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><circle cx="18" cy="18" r="3"/><path d="m22 22-1.5-1.5"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+};
+
+function makeSvg(name, active) {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${active ? 2.5 : 1.75}" stroke-linecap="round" stroke-linejoin="round">${icons[name]}</svg>`;
+}
+
+// ── State ──
+let activeApp = null;
+const iframes = {};
+
+// ── Build rail buttons ──
+const railEl = document.getElementById('rail-items');
+apps.forEach(app => {
+  const btn = document.createElement('button');
+  btn.className = 'rail-btn';
+  btn.title = app.label;
+  btn.setAttribute('data-app', app.id);
+  btn.innerHTML = makeSvg(app.icon, false);
+  btn.addEventListener('click', () => switchApp(app.id));
+  railEl.appendChild(btn);
+});
+
+// ── Iframe management ──
+function switchApp(id) {
+  if (activeApp === id) return;
+  const app = apps.find(a => a.id === id);
+  if (!app) return;
+
+  // Update rail active state
+  document.querySelectorAll('.rail-btn[data-app]').forEach(btn => {
+    const isActive = btn.getAttribute('data-app') === id;
+    btn.className = 'rail-btn' + (isActive ? ' active' : '');
+    const appData = apps.find(a => a.id === btn.getAttribute('data-app'));
+    if (appData) btn.innerHTML = makeSvg(appData.icon, isActive);
+  });
+
+  // Hide all iframes
+  Object.values(iframes).forEach(f => f.classList.add('hidden'));
+
+  // Create or show iframe
+  if (!iframes[id]) {
+    const iframe = document.createElement('iframe');
+    iframe.src = app.path;
+    iframe.setAttribute('data-app', id);
+    // Allow the iframe to use fullscreen, forms, etc.
+    iframe.allow = 'clipboard-read; clipboard-write';
+    document.getElementById('content').appendChild(iframe);
+    iframes[id] = iframe;
+  } else {
+    iframes[id].classList.remove('hidden');
+  }
+
+  activeApp = id;
+  document.title = app.label + ' — Definit Manage';
+
+  // Update URL without reload
+  history.pushState({ app: id }, '', '/#' + id);
+}
+
+// ── Theme toggle ──
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
+// ── Init: load from hash or default to tasks ──
+const hash = window.location.hash.slice(1);
+const initial = apps.find(a => a.id === hash) ? hash : 'tasks';
+switchApp(initial);
+
+// ── Handle back/forward ──
+window.addEventListener('popstate', (e) => {
+  if (e.state?.app) switchApp(e.state.app);
+});
+</script>
+</body>
+</html>

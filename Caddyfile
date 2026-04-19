@@ -1,0 +1,38 @@
+{
+    auto_https off
+}
+
+# Checkmate — Uptime & Infrastructure Monitoring
+# DNS: status.definit.com CNAME -> manage tunnel (added in CF Zero Trust UI)
+# Auth: Cloudflare Access @definit.com gate (inherited from tunnel)
+http://status.definit.com {
+    reverse_proxy manage_checkmate_client:80
+}
+
+:80 {
+    # Next.js apps (basePath built-in, no stripping)
+    handle /eer* {
+        reverse_proxy email-review:3000
+    }
+    handle /teams* {
+        reverse_proxy teams-tracker:3000
+    }
+
+    # Vite apps (strip prefix)
+    handle_path /tasks/* {
+        reverse_proxy recurring-tasks:3008
+    }
+    handle_path /notes/* {
+        reverse_proxy notes:3009
+    }
+    handle_path /callscribe/* {
+        reverse_proxy callscribe:3020
+    }
+
+    # ManageShell portal — static files (fallback handler)
+    handle {
+        root * /etc/caddy/shell
+        try_files {path} /index.html
+        file_server
+    }
+}

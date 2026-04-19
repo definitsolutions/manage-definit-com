@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Users & Auth ─────────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  displayName      String
+  graphAccessToken String?   @db.Text
+  graphRefreshToken String?  @db.Text
+  tokenExpiresAt   DateTime?
+  lastSyncAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  messages     Message[]
+  threads      Thread[]
+  digestRuns   DigestRun[]
+  auditLogs    AuditLog[]
+  delegations  Delegation[]
+}
+
+// ── Messages ─────────────────────────────────────────────────
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model Message {
+  id                String           @id @default(cuid())
+  graphMessageId    String           @unique
+  conversationId    String
+  internetMessageId String?
+  subject           String
+  senderName        String?
+  senderEmail       String
+  recipientEmails   String[]         // array of email addresses
+  ccEmails          String[]
+  receivedAt        DateTime
+  sentAt            DateTime?
+  isRead            Boolean          @default(false)
+  categories        String[]
+  bodyPreview       String           @db.Text
+  bodySnippet       String?          @db.Text
+  direction         MessageDirection
+  isExternal        Boolean          @default(false)
+  isClientRelated   Boolean          @default(false)
+  folderId          String?
+  importance        String           @default("normal")
+  hasAttachments    Boolean          @default(false)
+  isForward         Boolean          @default(false) // subject starts with FW:/Fwd:
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  threadId String?
+  thread   Thread? @relation(fields: [threadId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([conversationId])
+  @@index([senderEmail])
+  @@index([receivedAt])
+  @@index([userId])
+  @@index([subject])
+}
+
+// ── Threads ──────────────────────────────────────────────────
+
+enum ThreadStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  RESOLVED
+  DELEGATED
+}
+
+model Thread {
+  id                     String       @id @default(cuid())
+  conversationId         String       @unique
+  subject                String
+  lastMessageAt          DateTime
+  lastClientMessageAt    DateTime?
+  lastInternalMessageAt  DateTime?
+  messageCount           Int          @default(0)
+  clientMessageCount     Int          @default(0)
+  internalMessageCount   Int          @default(0)
+  lastSenderEmail        String?
+  lastSenderIsClient     Boolean      @default(false)
+  status                 ThreadStatus @default(OPEN)
+  reviewedAt             DateTime?
+  reviewNote             String?
+  priorityScore          Int          @default(0) // 0-100
+  hasBeenForwarded       Boolean      @default(false)
+  hasTicket              Boolean      @default(false)
+  hasDelegation          Boolean      @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  messages    Message[]
+  flags       ThreadFlag[]
+  aiAnalyses  AIAnalysis[]
+  delegations Delegation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lastMessageAt])
+  @@index([priorityScore])
+  @@index([status])
+}
+
+// ── Delegation Tracking ──────────────────────────────────────
+
+enum DelegationType {
+  FORWARDED_TO_HELPDESK  // forwarded to helpdesk@definit.com → ticket
+  FORWARDED_TO_TEAM      // forwarded to an internal team member
+  TICKET_CREATED         // matched to a ticket in the ticket system
+  TEAMS_DISCUSSION       // discussed in Teams chat
+  MANUAL                 // manually marked as delegated
+}
+
+model Delegation {
+  id            String         @id @default(cuid())
+  threadId      String
+  thread        Thread         @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  type          DelegationType
+  delegatedTo   String?        // email or name of person/system delegated to
+  ticketId      String?        // ticket system ticket ID if applicable
+  ticketNumber  Int?           // ticket number for display
+  notes         String?
+  detectedAt    DateTime       @default(now())
+  detectedBy    String         @default("system") // system or userId
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([threadId])
+  @@index([ticketId])
+}
+
+// ── Client Identification ────────────────────────────────────
+
+model ClientDomain {
+  id          String  @id @default(cuid())
+  domain      String  @unique
+  companyName String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model VipContact {
+  id          String  @id @default(cuid())
+  email       String  @unique
+  name        String?
+  companyName String?
+  priority    Int     @default(1) // 1=normal VIP, 2=high, 3=critical
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model IgnoredDomain {
+  id        String  @id @default(cuid())
+  domain    String  @unique
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+// ── Internal Team (for delegation detection) ─────────────────
+
+model TeamMember {
+  id        String  @id @default(cuid())
+  email     String  @unique
+  name      String?
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ── Flags & Analysis ─────────────────────────────────────────
+
+enum FlagType {
+  UNREAD_AGED
+  CLIENT_AWAITING_REPLY
+  STALE_THREAD
+  URGENCY_LANGUAGE
+  COMMITMENT_NO_FOLLOWUP
+  VIP_NEEDS_ATTENTION
+  NO_INTERNAL_REPLY
+}
+
+enum FlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model ThreadFlag {
+  id          String       @id @default(cuid())
+  threadId    String
+  thread      Thread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  flagType    FlagType
+  severity    FlagSeverity @default(MEDIUM)
+  description String
+  metadata    Json?        // flexible store for matched keywords, timestamps, etc.
+  isResolved  Boolean      @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@index([threadId])
+  @@index([flagType])
+}
+
+model AIAnalysis {
+  id              String   @id @default(cuid())
+  threadId        String
+  thread          Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  summary         String   @db.Text
+  classification  String   // needs_action, monitoring, resolved, informational, delegated
+  priority        String   // critical, high, medium, low
+  suggestedAction String?  @db.Text
+  explanation     String?  @db.Text
+  draftReply      String?  @db.Text
+  model           String
+  tokenCount      Int?
+  analyzedAt      DateTime @default(now())
+
+  @@index([threadId])
+}
+
+// ── Digest ───────────────────────────────────────────────────
+
+enum DigestStatus {
+  GENERATED
+  VIEWED
+  SENT
+}
+
+model DigestRun {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  generatedAt DateTime     @default(now())
+  itemCount   Int
+  content     Json         // structured digest content
+  plainText   String?      @db.Text
+  status      DigestStatus @default(GENERATED)
+  viewedAt    DateTime?
+}
+
+// ── Configuration ────────────────────────────────────────────
+
+model AppSetting {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  value       String  @db.Text
+  category    String  // thresholds, keywords, digest, general
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+// ── Audit Log ────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   Json?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+}

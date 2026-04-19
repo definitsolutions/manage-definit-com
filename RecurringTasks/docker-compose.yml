@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    container_name: apps_definit_recurring_tasks
+    ports:
+      - "3008:3008"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://recurring_tasks:qc9id5xLzwrQSMyOoU1bPJ1HwxpteLM5@apps_definit_postgres:5432/recurring_tasks
+      - PORT=3008
+      - PORTAL_SHARED_SECRET=${PORTAL_SHARED_SECRET:-dev-internal-secret-change-in-prod}
+      - GENERATION_SCHEDULE=0 1 * * *
+    networks:
+      - apps_definit_network
+    restart: unless-stopped
+
+networks:
+  apps_definit_network:
+    external: true

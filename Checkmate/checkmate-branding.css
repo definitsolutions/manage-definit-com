@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* Font */
+body, body * { font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif !important; }
+
+/* ============================================================================
+   LIGHT MODE (default)
+   ============================================================================ */
+html body { background-color: #fafafa !important; color: #2d2d2d !important; }
+.MuiPaper-root.MuiPaper-root { background-color: #ffffff !important; color: #2d2d2d !important; }
+.MuiBox-root.MuiBox-root, .MuiStack-root.MuiStack-root { background-color: transparent !important; }
+aside { background-color: #ffffff !important; border-right: 1px solid #e7e6e4 !important; }
+
+/* Hide stock branding the original customization removed */
+aside > nav + div.MuiStack-root { display: none !important; }
+aside > nav:last-of-type { display: none !important; }
+aside > hr.MuiDivider-root { display: none !important; }
+aside > hr.MuiDivider-root ~ div { display: none !important; }
+
+/* Brand orange (new primary) */
+.MuiListItemButton-root.Mui-selected,
+.MuiListItemButton-root[aria-current="page"] {
+  background-color: rgba(238,72,35,0.1) !important;
+  color: #ee4823 !important;
+}
+.MuiListItemButton-root.Mui-selected .MuiTypography-root,
+.MuiListItemButton-root[aria-current="page"] .MuiTypography-root,
+.MuiListItemButton-root.Mui-selected svg,
+.MuiListItemButton-root[aria-current="page"] svg {
+  color: #ee4823 !important;
+  font-weight: 600 !important;
+}
+.MuiListItemButton-root:hover { background-color: rgba(238,72,35,0.06) !important; }
+
+.MuiAvatar-root.MuiAvatar-colorDefault { background-color: #ee4823 !important; color: #fff !important; }
+.MuiButton-containedPrimary, .MuiButton-contained { background-color: #ee4823 !important; color: #fff !important; }
+.MuiButton-containedPrimary:hover, .MuiButton-contained:hover { background-color: #bc3926 !important; }
+.MuiButton-textPrimary, .MuiLink-root { color: #ee4823 !important; }
+.MuiButton-outlinedPrimary { color: #ee4823 !important; border-color: #ee4823 !important; }
+.MuiSwitch-colorPrimary.Mui-checked { color: #ee4823 !important; }
+.MuiSwitch-colorPrimary.Mui-checked + .MuiSwitch-track { background-color: #ee4823 !important; }
+.MuiCheckbox-colorPrimary.Mui-checked, .MuiRadio-colorPrimary.Mui-checked { color: #ee4823 !important; }
+.MuiTab-root.Mui-selected { color: #ee4823 !important; }
+.MuiTabs-indicator { background-color: #ee4823 !important; }
+.MuiCircularProgress-colorPrimary { color: #ee4823 !important; }
+.MuiLinearProgress-colorPrimary .MuiLinearProgress-bar { background-color: #ee4823 !important; }
+a:not(.MuiButton-root) { color: #ee4823 !important; }
+a:not(.MuiButton-root):hover { color: #bc3926 !important; }
+.MuiFab-primary { background-color: #ee4823 !important; }
+
+/* ============================================================================
+   DARK MODE — follows OS prefers-color-scheme
+   Matches apps.definit.com warm-ink palette (bg #000, card #1c1c1c, border #2d2d2d)
+   ============================================================================ */
+@media (prefers-color-scheme: dark) {
+  html body { background-color: #000000 !important; color: #fafafa !important; }
+  .MuiPaper-root.MuiPaper-root { background-color: #1c1c1c !important; color: #fafafa !important; border-color: #2d2d2d !important; }
+  aside { background-color: #1c1c1c !important; border-right-color: #2d2d2d !important; }
+
+  /* Dark-mode primary shifts to amber for legibility */
+  .MuiListItemButton-root.Mui-selected,
+  .MuiListItemButton-root[aria-current="page"] {
+    background-color: rgba(241,157,35,0.15) !important;
+    color: #f19d23 !important;
+  }
+  .MuiListItemButton-root.Mui-selected .MuiTypography-root,
+  .MuiListItemButton-root[aria-current="page"] .MuiTypography-root,
+  .MuiListItemButton-root.Mui-selected svg,
+  .MuiListItemButton-root[aria-current="page"] svg { color: #f19d23 !important; }
+  .MuiListItemButton-root:hover { background-color: rgba(255,255,255,0.04) !important; }
+
+  /* Typography — fix invisible text */
+  .MuiTypography-root { color: inherit !important; }
+  .MuiTypography-h1, .MuiTypography-h2, .MuiTypography-h3,
+  .MuiTypography-h4, .MuiTypography-h5, .MuiTypography-h6,
+  .MuiTypography-body1, .MuiTypography-subtitle1, .MuiTypography-subtitle2 { color: #fafafa !important; }
+  .MuiTypography-body2, .MuiTypography-caption, .MuiTypography-overline { color: #9a9794 !important; }
+
+  /* Tables — fix invisible headers */
+  .MuiTable-root { background-color: transparent !important; }
+  .MuiTableCell-root { color: #fafafa !important; border-color: #2d2d2d !important; background-color: transparent !important; }
+  .MuiTableCell-head { color: #9a9794 !important; background-color: #1c1c1c !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.6875rem !important; }
+  .MuiTableRow-root:hover { background-color: rgba(255,255,255,0.03) !important; }
+
+  /* Inputs */
+  .MuiOutlinedInput-root { background-color: #1c1c1c !important; color: #fafafa !important; }
+  .MuiOutlinedInput-notchedOutline { border-color: #2d2d2d !important; }
+  .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline { border-color: #3a3a3a !important; }
+  .MuiInputLabel-root { color: #9a9794 !important; }
+  .MuiInputBase-input { color: #fafafa !important; }
+  .MuiFormHelperText-root { color: #9a9794 !important; }
+
+  /* Icons default to inherit */
+  .MuiSvgIcon-root { color: inherit !important; }
+
+  /* Sidebar list items default text */
+  .MuiListItemText-root .MuiTypography-root { color: #fafafa !important; }
+  .MuiListItemIcon-root { color: #9a9794 !important; }
+  .MuiListItemButton-root .MuiListItemIcon-root { color: #9a9794 !important; }
+
+  /* Dividers */
+  .MuiDivider-root { border-color: #2d2d2d !important; }
+
+  /* Dialogs, menus, popovers */
+  .MuiDialog-paper { background-color: #1c1c1c !important; color: #fafafa !important; }
+  .MuiMenu-paper, .MuiPopover-paper, .MuiAutocomplete-popper > * {
+    background-color: #1c1c1c !important;
+    color: #fafafa !important;
+    border: 1px solid #2d2d2d !important;
+  }
+  .MuiMenuItem-root { color: #fafafa !important; }
+  .MuiMenuItem-root:hover { background-color: #2d2d2d !important; }
+
+  /* Tooltips */
+  .MuiTooltip-tooltip { background-color: #2d2d2d !important; color: #fafafa !important; }
+
+  /* Buttons in dark mode — amber primary */
+  .MuiButton-containedPrimary, .MuiButton-contained { background-color: #f19d23 !important; color: #1c1c1c !important; }
+  .MuiButton-containedPrimary:hover, .MuiButton-contained:hover { background-color: #ee6f23 !important; color: #fff !important; }
+  .MuiButton-textPrimary, .MuiLink-root { color: #f19d23 !important; }
+  .MuiButton-outlinedPrimary { color: #f19d23 !important; border-color: #f19d23 !important; }
+  .MuiSwitch-colorPrimary.Mui-checked { color: #f19d23 !important; }
+  .MuiSwitch-colorPrimary.Mui-checked + .MuiSwitch-track { background-color: #f19d23 !important; }
+  .MuiCheckbox-colorPrimary.Mui-checked, .MuiRadio-colorPrimary.Mui-checked { color: #f19d23 !important; }
+  .MuiTab-root.Mui-selected { color: #f19d23 !important; }
+  .MuiTabs-indicator { background-color: #f19d23 !important; }
+  .MuiCircularProgress-colorPrimary { color: #f19d23 !important; }
+  .MuiLinearProgress-colorPrimary .MuiLinearProgress-bar { background-color: #f19d23 !important; }
+  a:not(.MuiButton-root) { color: #f19d23 !important; }
+  a:not(.MuiButton-root):hover { color: #ee6f23 !important; }
+  .MuiFab-primary { background-color: #f19d23 !important; color: #1c1c1c !important; }
+
+  /* Charts/SVG backgrounds (response time panels) */
+  svg { background-color: transparent !important; }
+
+  /* Status chips */
+  .MuiChip-colorSuccess { background-color: rgba(34,197,94,0.15) !important; color: #22c55e !important; }
+  .MuiChip-colorError { background-color: rgba(239,68,68,0.15) !important; color: #ef4444 !important; }
+  .MuiChip-colorWarning { background-color: rgba(241,157,35,0.15) !important; color: #f19d23 !important; }
+}

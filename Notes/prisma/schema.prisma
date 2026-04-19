@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  notes  Note[]
+  labels Label[]
+}
+
+model Note {
+  id         String    @id @default(cuid())
+  userId     String
+  title      String    @default("")
+  content    String    @default("")
+  color      String    @default("default")
+  pinned     Boolean   @default(false)
+  archived   Boolean   @default(false)
+  trashed    Boolean   @default(false)
+  visibility String    @default("private")
+  sortOrder  Int       @default(0)
+  trashedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checklistItems ChecklistItem[]
+  noteLabels     NoteLabel[]
+
+  @@index([userId, archived, trashed])
+  @@index([visibility])
+}
+
+model ChecklistItem {
+  id        String   @id @default(cuid())
+  noteId    String
+  text      String
+  checked   Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  note Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId, sortOrder])
+}
+
+model Label {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteLabels NoteLabel[]
+
+  @@unique([userId, name])
+}
+
+model NoteLabel {
+  id      String @id @default(cuid())
+  noteId  String
+  labelId String
+
+  note  Note  @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, labelId])
+}

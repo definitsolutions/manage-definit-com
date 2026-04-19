@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── User ─────────────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  displayName      String
+  graphAccessToken String?   @db.Text
+  graphRefreshToken String?  @db.Text
+  tokenExpiresAt   DateTime?
+  lastSyncAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  tasks     Task[]
+  chats     Chat[]
+  auditLogs AuditLog[]
+}
+
+// ── Teams Chats ──────────────────────────────────────────
+
+model Chat {
+  id            String   @id @default(cuid())
+  graphChatId   String   @unique
+  chatType      String   // oneOnOne, group, meeting
+  topic         String?  // group chat name or meeting title
+  lastSyncedAt  DateTime?
+  lastMessageAt DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  messages ChatMessage[]
+  tasks    Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lastMessageAt])
+}
+
+// ── Chat Messages ────────────────────────────────────────
+
+model ChatMessage {
+  id              String   @id @default(cuid())
+  graphMessageId  String   @unique
+  chatId          String
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderEmail     String
+  senderName      String?
+  content         String   @db.Text  // plain text extracted from HTML
+  receivedAt      DateTime
+  isFromMe        Boolean  @default(false)
+  importance      String   @default("normal")
+  hasTask         Boolean  @default(false)  // detected as containing a task
+
+  // Participants mentioned/involved
+  mentions        String[] // emails of @mentioned users
+
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([senderEmail])
+  @@index([receivedAt])
+}
+
+// ── Detected Tasks ───────────────────────────────────────
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  SNOOZED
+  DISMISSED
+}
+
+enum TaskDirection {
+  ASSIGNED_TO_ME   // someone asked me to do something
+  ASSIGNED_BY_ME   // I asked someone else to do something
+  COMMITMENT       // I said I'd do something
+  MUTUAL           // collaborative action item
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Task {
+  id              String        @id @default(cuid())
+  chatId          String
+  chat            Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  direction       TaskDirection
+  status          TaskStatus    @default(OPEN)
+  priority        TaskPriority  @default(MEDIUM)
+  title           String        // AI-extracted short task description
+  context         String        @db.Text  // surrounding message context
+  assignedTo      String?       // email of person responsible
+  assignedToName  String?
+  assignedBy      String?       // email of person who assigned
+  assignedByName  String?
+  detectedAt      DateTime      @default(now())
+  dueDate         DateTime?     // if a deadline was mentioned
+  completedAt     DateTime?
+  snoozedUntil    DateTime?
+  dismissedAt     DateTime?
+  reviewNote      String?
+
+  // AI analysis
+  aiConfidence    Float         @default(0) // 0-1 confidence this is a real task
+  aiExplanation   String?       @db.Text
+  suggestedAction String?       @db.Text
+
+  // Source message that triggered detection
+  sourceMessageId String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  messages ChatMessage[] // related messages in the thread
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([direction])
+  @@index([priority])
+  @@index([detectedAt])
+}
+
+// ── Config ───────────────────────────────────────────────
+
+model AppSetting {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  value       String  @db.Text
+  category    String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+// ── Audit Log ────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   Json?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+}

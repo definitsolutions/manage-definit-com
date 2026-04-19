@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: executive_email_review
+    restart: unless-stopped
+    ports:
+      - "3015:3000"
+    environment:
+      - DATABASE_URL=postgresql://eer:${DB_PASSWORD:-changeme}@db:5432/executive_email_review
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3015}
+      - MOCK_MODE=${MOCK_MODE:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - eer_network
+
+  db:
+    image: postgres:16-alpine
+    container_name: eer_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eer
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: executive_email_review
+    volumes:
+      - eer_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eer_network
+
+volumes:
+  eer_pgdata:
+
+networks:
+  eer_network:
+    driver: bridge
