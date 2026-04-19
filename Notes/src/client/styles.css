@@ -33,6 +33,7 @@ body {
   height: 100vh;
 }
 .icon-rail-logo { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); width: 100%; display: flex; justify-content: center; }
+.icon-rail-logo-img { width: 24px; height: 24px; object-fit: contain; }
 .icon-rail-logo-link { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; text-decoration: none; color: var(--primary); font-weight: 700; }
 .icon-rail-logo-fallback { font-size: 18px; font-weight: 800; color: var(--primary); }
 .icon-rail-items { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
