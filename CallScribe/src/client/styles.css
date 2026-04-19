@@ -307,3 +307,9 @@ body {
   .sidebar { display: none; }
   .zendesk-main { grid-column: 1; }
 }
+
+/* When iframed by manage shell, hide this app's own rail/sidebar chrome. */
+html.in-iframe .icon-rail,
+html.in-iframe .sidebar { display: none !important; }
+html.in-iframe .zendesk-layout { grid-template-columns: 1fr !important; }
+html.in-iframe .zendesk-main { grid-column: 1 !important; margin-left: 0 !important; }
